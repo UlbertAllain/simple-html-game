@@ -8,6 +8,7 @@ const storyLines = [
   { speaker: "Narrator", text: "Your kingdom has fallen to ashes.", color: "#9ca3af" },
   { speaker: "Veteran Knight", text: "You are the last of the Blue Knights.", color: "#3b82f6" },
   { speaker: "Veteran Knight", text: "Survive the 5 Districts. Reach the Magic Duck.", color: "#f59e0b" },
+  { speaker: "Mysterious Voice", text: "I sense potential in you... Choose your path wisely.", color: "#a855f7" },
   { speaker: "System", text: "Save the realm.", color: "#fbbf24" }
 ];
 
@@ -47,28 +48,21 @@ export default function ProloguePage() {
   return (
     <div className="w-screen h-screen bg-black flex flex-col justify-end relative overflow-hidden cursor-pointer" onClick={handleSkip}>
       
-      {/* Background Gelap dengan Sinar */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-red-950/30 via-black to-black opacity-80" />
-      
-      {/* Scanlines */}
       <div className="scanlines absolute inset-0 opacity-20"></div>
 
-      {/* Dialog Box di Bawah */}
       <div className="z-10 w-full p-8 md:p-12 bg-gradient-to-t from-black via-gray-950/95 to-transparent border-t-2 border-blue-800 shadow-[0_-10px_50px_rgba(59,130,246,0.2)]">
         
         <div className="max-w-4xl mx-auto flex gap-6">
-          {/* Avatar/Potret Karakter */}
           <div className="flex-shrink-0 w-24 h-24 bg-gray-900 border-2 border-blue-500 rounded-md flex items-center justify-center text-5xl shadow-[0_0_15px_rgba(59,130,246,0.5)]">
             ⚔️
           </div>
 
           <div className="flex-1">
-            {/* Nama Speaker */}
             <h3 className="text-blue-400 font-bold text-xl mb-2 tracking-widest drop-shadow-[0_0_10px_rgba(59,130,246,0.8)]">
               {storyLines[currentLine]?.speaker || "???"}
             </h3>
 
-            {/* Teks Dialog */}
             <p className="text-gray-200 text-2xl md:text-3xl font-mono leading-relaxed min-h-[80px]" style={{ color: storyLines[currentLine]?.color || '#fff' }}>
               {displayText}
               {isTyping && <span className="animate-blink text-white">|</span>}
@@ -76,7 +70,6 @@ export default function ProloguePage() {
           </div>
         </div>
 
-        {/* Tombol Lanjut / Skip */}
         <div className="max-w-4xl mx-auto mt-4 text-right">
           {currentLine >= storyLines.length ? (
             <button 
@@ -89,7 +82,6 @@ export default function ProloguePage() {
             <p className="text-gray-600 text-sm animate-pulse tracking-widest">CLICK TO SKIP ▶</p>
           )}
         </div>
-
       </div>
     </div>
   );

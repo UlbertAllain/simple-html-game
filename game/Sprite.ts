@@ -1,4 +1,9 @@
-// src/game/Sprite.ts
+// ============================================================
+// Sprite.ts - Sprite animation using cached images
+// Fixed: Now uses SpriteCache instead of creating new Image per instance
+// ============================================================
+
+import { getSprite } from './SpriteCache';
 
 export class Sprite {
     image: HTMLImageElement;
@@ -10,8 +15,8 @@ export class Sprite {
     frameInterval: number;
 
     constructor(imageSrc: string, frameWidth: number, frameHeight: number, frameCount: number, frameInterval: number = 8) {
-        this.image = new Image();
-        this.image.src = imageSrc;
+        // Use cache instead of new Image() every time
+        this.image = getSprite(imageSrc);
         this.frameWidth = frameWidth;
         this.frameHeight = frameHeight;
         this.frameCount = frameCount;
@@ -29,7 +34,16 @@ export class Sprite {
         }
     }
 
-    // TAMBAHIN PARAMETER flipX (default false)
+    /** Set a specific frame (useful for attack animations) */
+    setFrame(frame: number) {
+        this.currentFrame = Math.max(0, Math.min(frame, this.frameCount - 1));
+    }
+
+    /** Check if sprite image is loaded */
+    get isLoaded(): boolean {
+        return this.image.complete && this.image.naturalHeight !== 0;
+    }
+
     draw(ctx: CanvasRenderingContext2D, x: number, y: number, flipX: boolean = false, scale: number = 1) {
         if (!this.image.complete || this.image.naturalHeight === 0) return;
 
@@ -38,7 +52,7 @@ export class Sprite {
         ctx.save();
         ctx.translate(x, y);
         
-        // FLIP LOGIC: Kalau mouse di kiri, balik gambar secara horizontal
+        // FLIP LOGIC: If mouse is to the left, flip horizontally
         if (flipX) {
             ctx.scale(-1, 1); 
         }

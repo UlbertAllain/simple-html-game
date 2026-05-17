@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -12,18 +12,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
 }
+
+/* Animations */
 @keyframes float-up {
   0% { transform: translateY(0) scale(1); opacity: 0.8; }
   100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
@@ -39,10 +35,16 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 .animate-flicker { animation: flicker 3s infinite; }
 .animate-fade-in-up { animation: fade-in-up 1s ease-out forwards; }
+.animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
 
-/* Efek TV Jadul (Scanlines) */
+/* Scanlines */
 .scanlines {
   background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
   background-size: 100% 2px, 3px 100%;
@@ -50,14 +52,14 @@ body {
   z-index: 100;
 }
 
-/* Animasi teks kedap-kedip */
+/* Blink cursor */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
 .animate-blink { animation: blink 1s step-end infinite; }
 
-/* Efek Hover Menu Game */
+/* Menu hover */
 .menu-item {
   transition: all 0.2s ease;
   transform: translateX(0);
@@ -68,7 +70,7 @@ body {
   text-shadow: 0 0 10px #3b82f6, 0 0 20px #3b82f6;
 }
 
-/* Logo Text Styling */
+/* Logo styling */
 .logo-title {
   background: linear-gradient(to bottom, #bfdbfe, #60a5fa, #1d4ed8);
   -webkit-background-clip: text;
@@ -79,4 +81,15 @@ body {
 .logo-subtitle {
   letter-spacing: 0.5em;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #111; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+/* Canvas styling */
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }

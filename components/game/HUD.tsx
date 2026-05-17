@@ -1,4 +1,11 @@
-export default function HUD({ stats, weaponList }: { stats: any, weaponList: string[] }) {
+// ============================================================
+// HUD.tsx - Improved HUD with typed stats, gold, class, artifacts
+// Fixed: Removed `any` type, added new info displays
+// ============================================================
+
+import { GameStats } from '@/game/types';
+
+export default function HUD({ stats, weaponList }: { stats: GameStats, weaponList: string[] }) {
   return (
     <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/90 p-3 rounded-md border border-gray-700 flex gap-4 items-end text-white font-bold text-sm tracking-wider z-20">
       {/* Bars */}
@@ -53,23 +60,36 @@ export default function HUD({ stats, weaponList }: { stats: any, weaponList: str
         </div>
       </div>
 
-      
+      {/* Class & Artifacts */}
+      <div className="flex flex-col items-center gap-1 border-l border-gray-700 pl-3">
+        <span className="text-[9px] text-gray-400">CLASS</span>
+        <span className="text-xs text-purple-400 capitalize">{stats.className}</span>
+        {stats.artifactCount > 0 && (
+          <span className="text-[8px] text-amber-400">💎 {stats.artifactCount}</span>
+        )}
+      </div>
 
       {/* Zone Progress */}
-                <div className="text-white text-base font-mono border-l border-gray-700 pl-3 flex flex-col items-center">
-             <span className="text-[9px] text-gray-400">ESCAPE CITY</span>
-             <span className={stats.zone >= 5 ? "text-green-400" : "text-yellow-400"}>
-               D-{stats.zone} / 5
-             </span>
-          </div>
+      <div className="text-white text-base font-mono border-l border-gray-700 pl-3 flex flex-col items-center">
+        <span className="text-[9px] text-gray-400">ESCAPE CITY</span>
+        <span className={stats.zone >= 5 ? "text-green-400" : "text-yellow-400"}>
+          D-{stats.zone} / 5
+        </span>
+      </div>
 
-          {/* TAMBAHAN KILL QUOTA */}
-          <div className="text-white text-base font-mono border-l border-gray-700 pl-3 flex flex-col items-center">
-             <span className="text-[9px] text-gray-400">TARGET</span>
-             <span className={stats.portalOpen ? "text-green-400" : "text-red-400"}>
-               {stats.portalOpen ? "OPEN!" : `${stats.kills} / ${stats.quota}`}
-             </span>
-          </div>
+      {/* Kill Quota */}
+      <div className="text-white text-base font-mono border-l border-gray-700 pl-3 flex flex-col items-center">
+        <span className="text-[9px] text-gray-400">TARGET</span>
+        <span className={stats.portalOpen ? "text-green-400" : "text-red-400"}>
+          {stats.portalOpen ? "OPEN!" : `${stats.kills} / ${stats.quota}`}
+        </span>
+      </div>
+
+      {/* Gold */}
+      <div className="text-white text-base font-mono border-l border-gray-700 pl-3 flex flex-col items-center">
+        <span className="text-[9px] text-gray-400">GOLD</span>
+        <span className="text-yellow-300">🪙 {stats.gold}</span>
+      </div>
     </div>
   );
 }

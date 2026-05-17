@@ -1,4 +1,7 @@
-// src/game/CityGenerator.ts
+// ============================================================
+// CityGenerator.ts - Procedural city map generation
+// Improved: Cleaner code, no duplicate comments
+// ============================================================
 
 export const TILE_SIZE = 40;
 export const MAP_COLS = 50;
@@ -6,7 +9,6 @@ export const MAP_ROWS = 50;
 export const WORLD_W = MAP_COLS * TILE_SIZE;
 export const WORLD_H = MAP_ROWS * TILE_SIZE;
 
-// TAMBAH TYPE 9 (WALL) & 10 (WATER)
 export type TileType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 let buildingTypes: HTMLImageElement[] = [];
@@ -14,7 +16,6 @@ let rockTypes: HTMLImageElement[] = [];
 let bushTypes: HTMLImageElement[] = [];
 let treeTypes: HTMLImageElement[] = []; 
 let duckImg: HTMLImageElement | null = null;
-// Tambahin variabel ini di atas
 let waterBaseImg: HTMLImageElement | null = null;
 let waterFoamImg: HTMLImageElement | null = null;
 
@@ -41,7 +42,6 @@ function initAssets() {
 
   duckImg = new Image(); duckImg.src = '/Duck.png';
   
-  // LOAD ASSET AIR BARU
   waterBaseImg = new Image(); waterBaseImg.src = '/water_base.png';
   waterFoamImg = new Image(); waterFoamImg.src = '/water_foam.png';
 }
@@ -72,48 +72,46 @@ export function generateCity(zone: number = 1): TileType[][] {
     for (let x = 0; x < MAP_COLS; x++) map[y][x] = 0;
   }
 
-  // 1. BIKIN TEMBOK DI PINGGIR MAP
+  // Border walls
   for (let y = 0; y < MAP_ROWS; y++) {
     for (let x = 0; x < MAP_COLS; x++) {
       if (y === 0 || y === MAP_ROWS - 1 || x === 0 || x === MAP_COLS - 1) {
-        map[y][x] = 9; // Wall
+        map[y][x] = 9;
       }
     }
   }
 
-  // 2. MAIN ROADS (Sedikit di-offset biar gak pas di tengah tembok)
+  // Main roads (cross shape)
   const mainRoadH = Math.floor(MAP_ROWS / 2); 
   const mainRoadV = Math.floor(MAP_COLS / 2);
   for (let i = 1; i < MAP_COLS - 1; i++) { map[mainRoadH][i] = 1; map[mainRoadH - 1][i] = 1; map[mainRoadH + 1][i] = 1; }
   for (let i = 1; i < MAP_ROWS - 1; i++) { map[i][mainRoadV] = 1; map[i][mainRoadV - 1] = 1; map[i][mainRoadV + 1] = 1; }
 
-  // 3. BIKIN DANAU RANDOM (WATER)
-  const numLakes = 1 + Math.floor(hashCoords(zone, zone * 2) % 2); // 1-2 danau per zone
+  // Random lakes
+  const numLakes = 1 + Math.floor(hashCoords(zone, zone * 2) % 2);
   for(let l = 0; l < numLakes; l++) {
     let lakeCX = 10 + Math.floor(hashCoords(l, zone * 3) % (MAP_COLS - 20));
     let lakeCY = 10 + Math.floor(hashCoords(zone * 3, l) % (MAP_ROWS - 20));
-    let lakeR = 2 + Math.floor(hashCoords(l, l) % 2); // Radius 2-3 tile
+    let lakeR = 2 + Math.floor(hashCoords(l, l) % 2);
 
-    // Jangan bikin danau pas di jalan utama
     if (Math.abs(lakeCY - mainRoadH) < 5 && Math.abs(lakeCX - mainRoadV) < 5) continue;
 
     for (let y = lakeCY - lakeR; y <= lakeCY + lakeR; y++) {
       for (let x = lakeCX - lakeR; x <= lakeCX + lakeR; x++) {
         if (y > 0 && y < MAP_ROWS - 1 && x > 0 && x < MAP_COLS - 1) {
-          // Buat bentuk danau gak sempurna kotak
           const dist = Math.hypot(x - lakeCX, y - lakeCY);
           if (dist <= lakeR + (hashCoords(x, y, zone) % 2) * 0.5) {
-            map[y][x] = 10; // Water
+            map[y][x] = 10;
           }
         }
       }
     }
   }
 
-  // 4. POPULATE MAP (Rumah, Pohon, Batu)
+  // Populate: Houses, Trees, Rocks
   for (let y = 3; y < MAP_ROWS - 3; y++) {
     for (let x = 3; x < MAP_COLS - 3; x++) {
-      if (map[y][x] !== 0) continue; // Skip jika udah ada jalan/tembok/air
+      if (map[y][x] !== 0) continue;
 
       const h = hashCoords(x, y, zone * 100); 
       let houseChance = 0.05, treeChance = 0.02, rockChance = 0.01;
@@ -128,7 +126,7 @@ export function generateCity(zone: number = 1): TileType[][] {
         let canPlace = true;
         for (let fy = -2; fy <= 0; fy++) { 
           for (let fx = -1; fx <= 1; fx++) { 
-            if (map[y+fy]?.[x+fx] === 1 || map[y+fy]?.[x+fx] === 2 || map[y+fy]?.[x+fx] === 10) canPlace = false; // Jangan taruh rumah di air
+            if (map[y+fy]?.[x+fx] === 1 || map[y+fy]?.[x+fx] === 2 || map[y+fy]?.[x+fx] === 10) canPlace = false;
           }
         }
         if (canPlace) {
@@ -149,12 +147,14 @@ export function generateCity(zone: number = 1): TileType[][] {
         }
       }
       
+      // Bushes near roads
       const nearRoad = (map[y-1]?.[x] === 1 || map[y+1]?.[x] === 1 || map[y]?.[x-1] === 1 || map[y]?.[x+1] === 1);
       const nearHouseBase2 = (map[y-1]?.[x] === 2 || map[y+1]?.[x] === 2 || map[y]?.[x-1] === 2 || map[y]?.[x+1] === 2);
       if (nearRoad && !nearHouseBase2 && map[y][x] === 0 && (h % 100) / 100 < 0.1) map[y][x] = 5;
     }
   }
 
+  // Exit portal (duck)
   map[mainRoadH][MAP_COLS - 3] = 6; 
   return map;
 }
@@ -163,26 +163,24 @@ export function isSolid(map: TileType[][], x: number, y: number): boolean {
   const tileX = Math.floor(x / TILE_SIZE); const tileY = Math.floor(y / TILE_SIZE);
   if (tileX < 0 || tileX >= MAP_COLS || tileY < 0 || tileY >= MAP_ROWS) return true;
   const tile = map[tileY][tileX];
-  // Type 9 (Wall) & 10 (Water) JUGA SOLID!
   return tile === 2 || tile === 4 || tile === 7 || tile === 8 || tile === 9 || tile === 10; 
 }
 
 export function drawTile(ctx: CanvasRenderingContext2D, x: number, y: number, type: TileType, map: TileType[][]) {
   const px = x * TILE_SIZE; const py = y * TILE_SIZE;
 
-  // 1. SELALU GAMBAR RUMPUT DASAR DI SEMUA TILE (BIAR GAK ITEM)
+  // Always draw grass base
   ctx.fillStyle = '#5b8c3e'; 
   ctx.fillRect(px, py, TILE_SIZE + 1, TILE_SIZE + 1); 
   
-  // 2. DETIL TIAP TILE
-  if (type === 1) { // JALAN
+  if (type === 1) { // Road
     ctx.fillStyle = '#c9a96e'; ctx.fillRect(px, py, TILE_SIZE + 1, TILE_SIZE + 1);
     ctx.fillStyle = '#b89860'; 
     const isHorizontal = (y > 0 && map[y-1][x] === 1) || (y < MAP_ROWS-1 && map[y+1][x] === 1);
     if (isHorizontal && x % 3 === 0) ctx.fillRect(px + 5, py + TILE_SIZE / 2 - 1, 30, 2);
     else if (!isHorizontal && y % 3 === 0) ctx.fillRect(px + TILE_SIZE / 2 - 1, py + 5, 2, 30);
   }
-  else if (type === 0 || type === 3 || type === 8) { // RUMPUT
+  else if (type === 0 || type === 3 || type === 8) { // Grass
     const h1 = hashCoords(x, y);
     const h2 = hashCoords(x + 99, y + 99);
     if (h1 % 7 === 0) { ctx.fillStyle = '#4e7a33'; ctx.fillRect(px + 10, py + 15, 15, 8); }
@@ -191,25 +189,25 @@ export function drawTile(ctx: CanvasRenderingContext2D, x: number, y: number, ty
     else if (h2 % 13 === 0) { ctx.fillStyle = '#f472b6'; ctx.fillRect(px + 8, py + 28, 3, 3); } 
     if (h1 % 4 === 0) { ctx.fillStyle = '#6b9c4e'; ctx.fillRect(px + 15, py + 18, 2, 6); ctx.fillRect(px + 25, py + 8, 2, 5); }
   }
-  else if (type === 2) { // RUMAH
+  else if (type === 2) { // House
     if (buildingTypes.length > 0) {
         const imgIndex = hashCoords(x, y) % buildingTypes.length;
         drawAsset(ctx, buildingTypes[imgIndex], px, py, 0.9, 0); 
     }
   }
-  else if (type === 4) { // BATU
+  else if (type === 4) { // Rock
     if (rockTypes.length > 0) {
         const imgIndex = hashCoords(x, y) % rockTypes.length;
         drawAsset(ctx, rockTypes[imgIndex], px, py, 1.0, 0);
     }
   }
-  else if (type === 5) { // SEMAK
+  else if (type === 5) { // Bush
     if (bushTypes.length > 0) {
         const imgIndex = hashCoords(x, y) % bushTypes.length;
         drawAsset(ctx, bushTypes[imgIndex], px, py, 1.2, 0);
     }
   }
-  else if (type === 7) { // POHON
+  else if (type === 7) { // Tree
     if (treeTypes.length > 0) {
         const imgIndex = hashCoords(x, y) % treeTypes.length;
         const img = treeTypes[imgIndex];
@@ -227,51 +225,36 @@ export function drawTile(ctx: CanvasRenderingContext2D, x: number, y: number, ty
         }
     }
   }
-  else if (type === 6) { // BEBEK
+  else if (type === 6) { // Duck (exit portal)
     drawAsset(ctx, duckImg, px, py, 1.5, -2);
   }
-  // --- TILE BARU ---
-    // --- TILE BARU ---
-  else if (type === 9) { // TEMBOK
-    // Kita pake Canvas Pixel Art aja biar gak ribet crop Tilemap_color1.png
-    ctx.fillStyle = '#6b7280'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); // Base abu
+  else if (type === 9) { // Wall
+    ctx.fillStyle = '#6b7280'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
     ctx.fillStyle = '#4b5563'; 
-    ctx.fillRect(px, py, TILE_SIZE/2, TILE_SIZE/2); // Kiri atas
-    ctx.fillRect(px + TILE_SIZE/2, py + TILE_SIZE/2, TILE_SIZE/2, TILE_SIZE/2); // Kanan bawah
+    ctx.fillRect(px, py, TILE_SIZE/2, TILE_SIZE/2);
+    ctx.fillRect(px + TILE_SIZE/2, py + TILE_SIZE/2, TILE_SIZE/2, TILE_SIZE/2);
     ctx.fillStyle = '#9ca3af';
-    ctx.fillRect(px + 2, py + 2, 4, 4); // Highlight bata
+    ctx.fillRect(px + 2, py + 2, 4, 4);
   }
-  else if (type === 10) { // AIR (DANAU)
-    // 1. Gambar base air (warna solid cyan dari asset kamu)
+  else if (type === 10) { // Water
     if (waterBaseImg && waterBaseImg.complete && waterBaseImg.naturalHeight !== 0) {
       ctx.drawImage(waterBaseImg, px, py, TILE_SIZE, TILE_SIZE);
     } else {
-      ctx.fillStyle = '#22d3ee'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE); // Fallback kalau gambar belom load
+      ctx.fillStyle = '#22d3ee'; ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
     }
 
-    // 2. Gambar animasi foam/ombak di atasnya
     if (waterFoamImg && waterFoamImg.complete && waterFoamImg.naturalHeight !== 0) {
-      ctx.globalAlpha = 0.7; // Agar transparan sedikit, gak nutupin base
-      
-      // Asumsi Water Foam.png punya 4 frame kotak sejajar (spritesheet)
+      ctx.globalAlpha = 0.7;
       const foamFrames = 4; 
       const frameW = waterFoamImg.naturalWidth / foamFrames;
-      
-      // Animasi bergantian berdasarkan waktu dan posisi tile
       const frameIndex = Math.floor((Date.now() / 300 + x + y) % foamFrames); 
       const srcX = frameIndex * frameW;
-      
-      // Efek naik turun ombak
       const waveOffset = Math.sin(Date.now() / 250 + x + y) * 2; 
-      
-      // Gambar potongan spritesheet foam
       ctx.drawImage(
-        waterFoamImg, 
-        srcX, 0, frameW, waterFoamImg.naturalHeight, // Source (potong gambar)
-        px, py + waveOffset, TILE_SIZE, TILE_SIZE // Destination (taruh di map)
+        waterFoamImg, srcX, 0, frameW, waterFoamImg.naturalHeight,
+        px, py + waveOffset, TILE_SIZE, TILE_SIZE
       );
-      
-      ctx.globalAlpha = 1.0; // Reset alpha
+      ctx.globalAlpha = 1.0;
     }
   }
 }
