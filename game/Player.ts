@@ -53,6 +53,7 @@ export class Player {
   
   xp: number = 0; xpToLevel: number = 50; level: number = 1;
   damageMultiplier: number = 1;
+  rageGainMultiplier: number = 1;
   gold: number = 0;
   
   // Artifacts collected this run
