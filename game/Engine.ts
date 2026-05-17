@@ -379,7 +379,7 @@ export class Engine {
     for (const p of this.projectiles) {
       ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle);
       if (p.img && p.img.complete && p.img.naturalHeight !== 0) {
-        const scale = p.type === 'fireball' ? 0.08 : 0.06;
+        const scale = p.type === 'fireball' ? 0.5 : 0.4;
         ctx.drawImage(p.img, -p.img.naturalWidth * scale / 2, -p.img.naturalHeight * scale / 2, p.img.naturalWidth * scale, p.img.naturalHeight * scale);
       } else {
         if (p.type === 'fireball') { ctx.fillStyle = '#ff44ff'; ctx.shadowBlur = 15; ctx.shadowColor = '#ff44ff'; ctx.beginPath(); ctx.arc(0, 0, p.radius, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0; }
