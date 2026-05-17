@@ -19,7 +19,7 @@ export default function GamePage() {
     rage: 0, maxRage: 100, potions: 3, zone: 1, 
     weaponName: "Greatsword", weaponIndex: 0,
     level: 1, xp: 0, xpToLevel: 50,
-    kills: 0, quota: 10, portalOpen: false,
+    kills: 0, totalKills: 0, quota: 10, portalOpen: false,
     bossHp: 0, bossMaxHp: 0, time: 0,
     gold: 0, className: 'warrior', artifactCount: 0,
   });
@@ -54,16 +54,16 @@ export default function GamePage() {
     engine.onLevelUp = (options) => setUpgrades(options);
     engine.onGameOver = () => setGameState('gameOver');
     engine.onGameWin = () => setGameState('gameWin');
-    engine.onArtifactPickup = (artifact) => setLastArtifact(artifact);
+    engine.onArtifactPickup = (artifact: { name: string; description: string; rarity: string; icon: string }) => setLastArtifact(artifact);
 
     // Init audio on first interaction
-    const initAudio = () => {
+    const handleAudioInit = () => {
       engine.initAudio();
-      document.removeEventListener('click', initAudio);
-      document.removeEventListener('keydown', initAudio);
+      document.removeEventListener('click', handleAudioInit);
+      document.removeEventListener('keydown', handleAudioInit);
     };
-    document.addEventListener('click', initAudio);
-    document.addEventListener('keydown', initAudio);
+    document.addEventListener('click', handleAudioInit);
+    document.addEventListener('keydown', handleAudioInit);
 
     engine.initGame(true, playerClass);
     engine.start();
@@ -77,6 +77,7 @@ export default function GamePage() {
       engineRef.current.isUserPaused = isPaused;
       engineRef.current.isPaused = isPaused || upgrades.length > 0;
     }
+    
   }, [isPaused, upgrades]);
 
   const handleSelectUpgrade = useCallback((upg: UpgradeOption) => {
@@ -92,6 +93,7 @@ export default function GamePage() {
     engineRef.current?.stop();
     engineRef.current?.initGame(true, playerClass);
     engineRef.current?.start();
+    
   }, [playerClass]);
 
   const handleResume = useCallback(() => {
@@ -104,7 +106,11 @@ export default function GamePage() {
 
   const handleUpdateSettings = useCallback((settings: Partial<import('@/game/types').GameSettings>) => {
     SaveManager.updateSettings(settings);
-    AudioManager.updateSettings(SaveManager.settings);
+    AudioManager.updateSettings({
+      masterVolume: SaveManager.settings.masterVolume,
+      sfxVolume: SaveManager.settings.sfxVolume,
+      musicVolume: SaveManager.settings.musicVolume,
+    });
   }, []);
 
   const dismissArtifact = useCallback(() => {
@@ -140,6 +146,7 @@ export default function GamePage() {
         height={600} 
         className="border-2 border-gray-800 shadow-2xl shadow-blue-900/20 z-0"
         onClick={() => engineRef.current?.initAudio()}
+        tabIndex={0}
       />
 
       {/* Zone Transition Overlay */}

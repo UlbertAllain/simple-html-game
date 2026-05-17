@@ -14,7 +14,7 @@ interface DashTrailEffect { x: number; y: number; angle: number; frame: number; 
 
 let dashCloudImg: HTMLImageElement | null = null;
 
-export interface UpgradeOption { id: string; title: string; description: string; apply: () => void; }
+export interface UpgradeOption { id: string; title: string; description: string; icon: string; rarity: 'common' | 'rare' | 'epic'; apply: () => void; }
 
 // Zone-specific enemy spawn pools
 const ZONE_ENEMY_POOLS: Record<number, EnemyType[]> = {
@@ -48,6 +48,9 @@ export class Engine {
   onLevelUp?: (options: UpgradeOption[]) => void;
   onGameOver?: () => void;
   onGameWin?: () => void;
+  onArtifactPickup?: (artifact: { name: string; description: string; rarity: string; icon: string }) => void;
+
+  isUserPaused: boolean = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas; this.ctx = canvas.getContext('2d')!;
@@ -57,19 +60,19 @@ export class Engine {
 
   private getUpgradeOptions(): UpgradeOption[] {
     return [
-      { id: 'hp', title: 'Vitality+', description: 'Max HP +30 & Heal', apply: () => { this.player.maxHp += 30; this.player.hp = Math.min(this.player.maxHp, this.player.hp + 30); } },
-      { id: 'speed', title: 'Swift Feet', description: 'Move Speed +15%', apply: () => { this.player.speed *= 1.15; } },
-      { id: 'damage', title: 'Brutality', description: 'Weapon Damage +20%', apply: () => { this.player.damageMultiplier *= 1.2; } },
-      { id: 'potion', title: 'Flask Capacity', description: 'Max Potions +1', apply: () => { this.player.maxPotions++; this.player.potions++; } },
-      { id: 'stamina', title: 'Endurance', description: 'Stamina Regen +50%', apply: () => { this.player.staminaRegen *= 1.5; } },
-      { id: 'rage', title: 'Inner Fire', description: 'Rage Gain +30%', apply: () => { this.player.rageGainMultiplier *= 1.3; } },
+      { id: 'hp', title: 'Vitality+', description: 'Max HP +30 & Heal', icon: '❤️', rarity: 'common', apply: () => { this.player.maxHp += 30; this.player.hp = Math.min(this.player.maxHp, this.player.hp + 30); } },
+      { id: 'speed', title: 'Swift Feet', description: 'Move Speed +15%', icon: '👢', rarity: 'common', apply: () => { this.player.speed *= 1.15; } },
+      { id: 'damage', title: 'Brutality', description: 'Weapon Damage +20%', icon: '⚔️', rarity: 'rare', apply: () => { this.player.damageMultiplier *= 1.2; } },
+      { id: 'potion', title: 'Flask Capacity', description: 'Max Potions +1', icon: '🧪', rarity: 'common', apply: () => { this.player.maxPotions++; this.player.potions++; } },
+      { id: 'stamina', title: 'Endurance', description: 'Stamina Regen +50%', icon: '⚡', rarity: 'rare', apply: () => { this.player.staminaRegen *= 1.5; } },
+      { id: 'rage', title: 'Inner Fire', description: 'Rage Gain +30%', icon: '🔥', rarity: 'epic', apply: () => { this.player.rageGainMultiplier *= 1.3; } },
     ];
   }
 
-  initGame(resetStats: boolean = true) {
+  initGame(resetStats: boolean = true, playerClass?: string) {
     this.map = generateCity(this.currentZone);
     if (resetStats) {
-      this.player = new Player(3 * TILE_SIZE, (Math.floor(MAP_ROWS / 2)) * TILE_SIZE);
+      this.player = new Player(3 * TILE_SIZE, (Math.floor(MAP_ROWS / 2)) * TILE_SIZE, (playerClass as any) || 'warrior');
       this.currentZone = 1;
       this.totalKills = 0;
     } else {
@@ -100,6 +103,8 @@ export class Engine {
 
   start() { this.stop(); this.loop(); }
   stop() { if (this.animationId) cancelAnimationFrame(this.animationId); AudioManager.stopMusic(); }
+  destroy() { this.stop(); this.enemies = []; this.projectiles = []; this.particles = []; this.slashEffects = []; this.aoeEffects = []; this.lootDrops = []; this.floatingTexts = []; this.dashTrailEffects = []; }
+  initAudio() { AudioManager.init(); }
   loop = () => { this.update(); this.draw(); this.animationId = requestAnimationFrame(this.loop); };
 
   spawnParticles(x: number, y: number, color: string, count: number, hasGravity: boolean = false) {

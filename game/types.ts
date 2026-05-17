@@ -19,6 +19,7 @@ export interface GameStats {
   xp: number;
   xpToLevel: number;
   kills: number;
+  totalKills: number;
   quota: number;
   portalOpen: boolean;
   bossHp: number;

@@ -110,16 +110,31 @@ class AudioManagerClass {
 
   stopMusic() { this.isMusicPlaying = false; }
 
+  updateSettings(settings: { masterVolume?: number; sfxVolume?: number; musicVolume?: number }) {
+    if (settings.masterVolume !== undefined && this.masterGain) {
+      this.masterGain.gain.value = settings.masterVolume;
+    }
+    if (settings.sfxVolume !== undefined) {
+      this.sfxVolume = settings.sfxVolume;
+      if (this.sfxGain) this.sfxGain.gain.value = settings.sfxVolume;
+    }
+    if (settings.musicVolume !== undefined) {
+      this.musicVolume = settings.musicVolume;
+      if (this.musicGain) this.musicGain.gain.value = settings.musicVolume;
+    }
+  }
+
   playSfx(type: 'hit' | 'slash' | 'dash' | 'portal' | 'levelup' | 'death' | 'arrow' | 'fireball' | 'boss_appear') {
     this.init();
     if (!this.audioContext || !this.sfxGain) return;
     const ctx = this.audioContext; const now = ctx.currentTime;
+    const sfxGainNode = this.sfxGain; // Non-null assertion after check
     switch (type) {
       case 'hit': {
         const osc = ctx.createOscillator(); const gain = ctx.createGain();
         osc.type = 'square'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
         gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-        osc.connect(gain); gain.connect(this.sfxGain); osc.start(now); osc.stop(now + 0.2);
+        osc.connect(gain); gain.connect(sfxGainNode); osc.start(now); osc.stop(now + 0.2);
         break;
       }
       case 'slash': {
@@ -129,14 +144,14 @@ class AudioManagerClass {
         const source = ctx.createBufferSource(); source.buffer = buffer;
         const filter = ctx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 3000;
         const gain = ctx.createGain(); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-        source.connect(filter); filter.connect(gain); gain.connect(this.sfxGain); source.start(now);
+        source.connect(filter); filter.connect(gain); gain.connect(sfxGainNode); source.start(now);
         break;
       }
       case 'dash': {
         const osc = ctx.createOscillator(); const gain = ctx.createGain();
         osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(800, now + 0.15);
         gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-        osc.connect(gain); gain.connect(this.sfxGain); osc.start(now); osc.stop(now + 0.25);
+        osc.connect(gain); gain.connect(sfxGainNode); osc.start(now); osc.stop(now + 0.25);
         break;
       }
       case 'portal': {
@@ -144,7 +159,7 @@ class AudioManagerClass {
           const osc = ctx.createOscillator(); const gain = ctx.createGain();
           osc.type = 'sine'; osc.frequency.value = 440 + i * 220;
           gain.gain.setValueAtTime(0.08, now + i * 0.15); gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.4);
-          osc.connect(gain); gain.connect(this.sfxGain); osc.start(now + i * 0.15); osc.stop(now + i * 0.15 + 0.5);
+          osc.connect(gain); gain.connect(sfxGainNode); osc.start(now + i * 0.15); osc.stop(now + i * 0.15 + 0.5);
         }
         break;
       }
@@ -153,7 +168,7 @@ class AudioManagerClass {
           const osc = ctx.createOscillator(); const gain = ctx.createGain();
           osc.type = 'triangle'; osc.frequency.value = freq;
           gain.gain.setValueAtTime(0.1, now + i * 0.1); gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3);
-          osc.connect(gain); gain.connect(this.sfxGain); osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.4);
+          osc.connect(gain); gain.connect(sfxGainNode); osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.4);
         });
         break;
       }
@@ -161,14 +176,14 @@ class AudioManagerClass {
         const osc = ctx.createOscillator(); const gain = ctx.createGain();
         osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(50, now + 0.8);
         gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-        osc.connect(gain); gain.connect(this.sfxGain); osc.start(now); osc.stop(now + 1);
+        osc.connect(gain); gain.connect(sfxGainNode); osc.start(now); osc.stop(now + 1);
         break;
       }
       case 'arrow': {
         const osc = ctx.createOscillator(); const gain = ctx.createGain();
         osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(400, now + 0.15);
         gain.gain.setValueAtTime(0.08, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-        osc.connect(gain); gain.connect(this.sfxGain); osc.start(now); osc.stop(now + 0.25);
+        osc.connect(gain); gain.connect(sfxGainNode); osc.start(now); osc.stop(now + 0.25);
         break;
       }
       case 'fireball': {
@@ -178,18 +193,18 @@ class AudioManagerClass {
         const source = ctx.createBufferSource(); source.buffer = buffer;
         const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 2000;
         const gain = ctx.createGain(); gain.gain.setValueAtTime(0.12, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-        source.connect(filter); filter.connect(gain); gain.connect(this.sfxGain); source.start(now);
+        source.connect(filter); filter.connect(gain); gain.connect(sfxGainNode); source.start(now);
         break;
       }
       case 'boss_appear': {
         const osc1 = ctx.createOscillator(); const gain1 = ctx.createGain();
         osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(50, now); osc1.frequency.linearRampToValueAtTime(30, now + 1.5);
         gain1.gain.setValueAtTime(0.2, now); gain1.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-        osc1.connect(gain1); gain1.connect(this.sfxGain); osc1.start(now); osc1.stop(now + 2);
+        osc1.connect(gain1); gain1.connect(sfxGainNode); osc1.start(now); osc1.stop(now + 2);
         const osc2 = ctx.createOscillator(); const gain2 = ctx.createGain();
         osc2.type = 'square'; osc2.frequency.setValueAtTime(100, now); osc2.frequency.exponentialRampToValueAtTime(600, now + 0.5);
         gain2.gain.setValueAtTime(0.05, now); gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-        osc2.connect(gain2); gain2.connect(this.sfxGain); osc2.start(now); osc2.stop(now + 1);
+        osc2.connect(gain2); gain2.connect(sfxGainNode); osc2.start(now); osc2.stop(now + 1);
         break;
       }
     }

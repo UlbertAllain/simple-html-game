@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface StoryLine {
@@ -32,12 +32,34 @@ const storyLines: StoryLine[] = [
   { speaker: "System", text: "Survive. Kill. Reach the Magic Duck. Save the realm.", color: "#fbbf24", bgEffect: 'pulse' },
 ];
 
+// Deterministic pseudo-random based on seed (avoids hydration mismatch)
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed * 9301 + 49297) * 49297;
+  return x - Math.floor(x);
+}
+
 export default function ProloguePage() {
   const router = useRouter();
   const [currentLine, setCurrentLine] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
   const [bgEffect, setBgEffect] = useState<string>('none');
+  const [mounted, setMounted] = useState(false);
+
+  // Generate deterministic ember particles to avoid hydration mismatch
+  const embers = useMemo(() => {
+    return Array.from({ length: 15 }, (_, i) => ({
+      left: 10 + seededRandom(i * 7 + 1) * 80,
+      width: 2 + seededRandom(i * 7 + 2) * 2,
+      height: 2 + seededRandom(i * 7 + 3) * 2,
+      duration: 6 + seededRandom(i * 7 + 4) * 8,
+      delay: seededRandom(i * 7 + 5) * 5,
+    }));
+  }, []);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (currentLine >= storyLines.length) return;
@@ -69,8 +91,14 @@ export default function ProloguePage() {
       <div className={`absolute inset-0 transition-all duration-1000 ${bgEffect === 'fade_red' ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-red-950/40 via-black to-black' : bgEffect === 'pulse' ? 'bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-950/30 via-black to-black' : 'bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-red-950/20 via-black to-black'}`} />
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-64 h-64 bg-orange-900/10 rounded-full blur-3xl animate-pulse" />
-        {Array.from({ length: 15 }).map((_, i) => (
-          <div key={i} className="absolute bg-orange-500/60 rounded-full" style={{ left: `${10 + Math.random() * 80}%`, bottom: '0', width: `${2 + Math.random() * 2}px`, height: `${2 + Math.random() * 2}px`, animation: `float-up ${6 + Math.random() * 8}s linear ${Math.random() * 5}s infinite` }} />
+        {mounted && embers.map((ember, i) => (
+          <div key={i} className="absolute bg-orange-500/60 rounded-full" style={{
+            left: `${ember.left}%`,
+            bottom: '0',
+            width: `${ember.width}px`,
+            height: `${ember.height}px`,
+            animation: `float-up ${ember.duration}s linear ${ember.delay}s infinite`
+          }} />
         ))}
       </div>
       <div className="scanlines absolute inset-0 opacity-15"></div>
